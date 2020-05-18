@@ -1,10 +1,10 @@
-import React from "react";
-import "./styles.css";
-import styled from "styled-components";
-import Scaper from "./components/Scaper";
-import audioFile1 from "./assets/dynamite.wav";
-import audioFile2 from "./assets/drone.wav";
-import audioFile3 from "./assets/fallout.wav";
+import React from 'react';
+import './styles.css';
+import styled from 'styled-components';
+import Scaper from './components/Scaper';
+import audioFile1 from './assets/dynamite.wav';
+import audioFile2 from './assets/drone.wav';
+import audioFile3 from './assets/fallout.wav';
 
 const Scapers = styled.section`
   display: grid;
@@ -15,7 +15,7 @@ const Scapers = styled.section`
 export default function App() {
   return (
     <div className="App">
-      <h1>SoundScaperesq</h1>
+      <h1>SoundScaperesq v0.0.1</h1>
       <Scapers>
         <Scaper source={audioFile1} amp={0.6} />
         <Scaper source={audioFile2} amp={0.4} loop />
