@@ -9,34 +9,20 @@ export default function Scaper({
   loop,
   rate = 1,
   amp = 1,
-  delayAmt = 0.5,
+  delayFeedback = 0.5,
   delayTime = 0.25,
+  delayMix = 0.5,
 }) {
   const containerRef = useRef(null);
   const playerNode = useRef(new Tone.Player()).current;
   const volumeNode = useRef(new Tone.Gain(amp, 'Decibels')).current;
-  // const delayNode = useRef(new Tone.FeedbackDelay(0.1, 0.8)).current;
-
   // for tape delay effect
   const dubDelayNode = useRef(new DubDelay()).current;
-  console.log(dubDelayNode);
+  // console.log(dubDelayNode);
 
-  const delayNode = useRef(new Tone.Delay({ maxDelay: 2, delayTime: 0.5 }))
-    .current;
-  const feedbackNode = useRef(new Tone.Gain(0.5)).current;
-  const filterNode = useRef(new Tone.Filter(500, 'lowpass')).current;
-  const lfoNode = useRef(new Tone.LFO(0.02, 0.096, 0.14)).current;
-
-  delayNode.connect(feedbackNode);
-  feedbackNode.connect(filterNode);
-  filterNode.connect(delayNode);
-
-  // volumeNode.connect(delayNode);
-
-  // lfoNode.connect(delayNode.delayTime);
-  playerNode.chain(volumeNode, delayNode);
-  playerNode.chain(volumeNode, Tone.Master);
-  delayNode.toMaster();
+  // const lfoNode = useRef(new Tone.LFO(0.02, 0.096, 0.14)).current;
+  playerNode.chain(dubDelayNode, Tone.Master);
+  // delayNode.toMaster();
 
   const [storedRate, setStoredRate] = useState(rate);
   const onRateChange = useCallback(e => setStoredRate(e), []);
@@ -50,24 +36,32 @@ export default function Scaper({
     volumeNode.gain.rampTo(Math.pow(storedAmp, 2), 0.2);
   }, [storedAmp]);
 
-  const [storedDelayAmt, setStoredDelayAmt] = useState(delayAmt);
-  const onDelayAmtChange = useCallback(e => setStoredDelayAmt(e), []);
+  // FEEDBACK
+  const [storedDelayFeedback, setStoredDelayFeedback] = useState(delayFeedback);
+  const onDelayFeedbackChange = useCallback(e => setStoredDelayFeedback(e), []);
   useEffect(() => {
-    feedbackNode.gain.rampTo(storedDelayAmt, 0.2);
-  }, [storedDelayAmt]);
+    dubDelayNode.feedback(storedDelayFeedback);
+  }, [storedDelayFeedback]);
 
+  // DELAY TIME
   const [storedDelayTime, setStoredDelayTime] = useState(delayTime);
   const onDelayTimeChange = useCallback(e => setStoredDelayTime(e), []);
   useEffect(() => {
-    delayNode.delayTime.rampTo(storedDelayTime, 0.2);
+    dubDelayNode.delayTime(storedDelayTime);
   }, [storedDelayTime]);
+
+  // DELAY TIME
+  const [storedDelayMix, setStoredDelayMix] = useState(delayMix);
+  const onDelayMixChange = useCallback(e => setStoredDelayMix(e), []);
+  useEffect(() => {
+    dubDelayNode.wet.rampTo(storedDelayMix, 0.2);
+  }, [storedDelayMix]);
 
   const [containerWidth, setContainerWidth] = useState(200);
 
   useEffect(() => {
-    lfoNode.start();
-
-    delayNode.delayTime.rampTo(0.1, 1);
+    // lfoNode.start();
+    // delayNode.delayTime.rampTo(0.1, 1);
 
     playerNode.load(source, player =>
       console.log(player.buffer.length, player.buffer.length / 200)
@@ -78,7 +72,7 @@ export default function Scaper({
     return function cleanUp() {
       playerNode.disconnect();
       volumeNode.disconnect();
-      delayNode.disconnect();
+      dubDelayNode.disconnect();
     };
   }, []);
 
@@ -129,9 +123,17 @@ export default function Scaper({
             totalWidth={containerWidth}
           />
           <NSlider
-            onSliderChange={onDelayAmtChange}
-            value={storedDelayAmt}
+            onSliderChange={onDelayFeedbackChange}
+            value={storedDelayFeedback}
             labelText="Feedback"
+            min={0}
+            max={1}
+            totalWidth={containerWidth}
+          />
+          <NSlider
+            onSliderChange={onDelayMixChange}
+            value={storedDelayMix}
+            labelText="Mix"
             min={0}
             max={1}
             totalWidth={containerWidth}

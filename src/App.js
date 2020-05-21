@@ -17,7 +17,7 @@ export default function App() {
     <div className="App">
       <h1>SoundScaperesq v0.0.1</h1>
       <Scapers>
-        <Scaper source={audioFile1} amp={0.6} />
+        <Scaper source={audioFile1} amp={0.6} loop />
         <Scaper source={audioFile2} amp={0.4} loop />
         <Scaper source={audioFile3} rate={0.5} loop />
       </Scapers>
