@@ -1,36 +1,42 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import Tone from "tone";
-import { ScaperContainer } from "./styles";
-import NSlider from "../NSlider";
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import Tone from 'tone';
+import { ScaperContainer, ScaperControlsSection } from './styles';
+import NSlider from '../nexusui/NSlider';
+import DubDelay from '../tonejs/DubDelay';
 
 export default function Scaper({
   source,
   loop,
   rate = 1,
   amp = 1,
-  delayAmt = 0.5
+  delayAmt = 0.5,
+  delayTime = 0.25,
 }) {
+  const containerRef = useRef(null);
   const playerNode = useRef(new Tone.Player()).current;
-  const volumeNode = useRef(new Tone.Gain(amp, "Decibels")).current;
-  const delayNode = useRef(new Tone.FeedbackDelay(0.1, 0.8)).current;
+  const volumeNode = useRef(new Tone.Gain(amp, 'Decibels')).current;
+  // const delayNode = useRef(new Tone.FeedbackDelay(0.1, 0.8)).current;
+
+  // for tape delay effect
+  const dubDelayNode = useRef(new DubDelay()).current;
+  console.log(dubDelayNode);
+
+  const delayNode = useRef(new Tone.Delay({ maxDelay: 2, delayTime: 0.5 }))
+    .current;
+  const feedbackNode = useRef(new Tone.Gain(0.5)).current;
+  const filterNode = useRef(new Tone.Filter(500, 'lowpass')).current;
   const lfoNode = useRef(new Tone.LFO(0.02, 0.096, 0.14)).current;
 
-  delayNode.toMaster();
-  lfoNode.connect(delayNode.delayTime);
+  delayNode.connect(feedbackNode);
+  feedbackNode.connect(filterNode);
+  filterNode.connect(delayNode);
+
+  // volumeNode.connect(delayNode);
+
+  // lfoNode.connect(delayNode.delayTime);
   playerNode.chain(volumeNode, delayNode);
-
-  useEffect(() => {
-    playerNode.load(source);
-    playerNode.loop = loop;
-    playerNode.playbackRate = rate;
-    lfoNode.start();
-
-    return function cleanUp() {
-      playerNode.disconnect();
-      volumeNode.disconnect();
-      delayNode.disconnect();
-    };
-  }, []);
+  playerNode.chain(volumeNode, Tone.Master);
+  delayNode.toMaster();
 
   const [storedRate, setStoredRate] = useState(rate);
   const onRateChange = useCallback(e => setStoredRate(e), []);
@@ -47,41 +53,91 @@ export default function Scaper({
   const [storedDelayAmt, setStoredDelayAmt] = useState(delayAmt);
   const onDelayAmtChange = useCallback(e => setStoredDelayAmt(e), []);
   useEffect(() => {
-    delayNode.wet.rampTo(storedDelayAmt, 0.2);
+    feedbackNode.gain.rampTo(storedDelayAmt, 0.2);
   }, [storedDelayAmt]);
+
+  const [storedDelayTime, setStoredDelayTime] = useState(delayTime);
+  const onDelayTimeChange = useCallback(e => setStoredDelayTime(e), []);
+  useEffect(() => {
+    delayNode.delayTime.rampTo(storedDelayTime, 0.2);
+  }, [storedDelayTime]);
+
+  const [containerWidth, setContainerWidth] = useState(200);
+
+  useEffect(() => {
+    lfoNode.start();
+
+    delayNode.delayTime.rampTo(0.1, 1);
+
+    playerNode.load(source, player =>
+      console.log(player.buffer.length, player.buffer.length / 200)
+    );
+    playerNode.loop = loop;
+    playerNode.playbackRate = rate;
+
+    return function cleanUp() {
+      playerNode.disconnect();
+      volumeNode.disconnect();
+      delayNode.disconnect();
+    };
+  }, []);
+
+  useEffect(() => setContainerWidth(containerRef.current.clientWidth), [
+    containerWidth,
+  ]);
 
   return (
     <ScaperContainer>
-      <div>[filesview]</div>
-      <button onClick={() => playerNode.start()}>start</button>
-      <button onClick={() => playerNode.stop()}>stop</button>
+      <div ref={containerRef}>
+        <div>[FILE VIEW]</div>
 
-      <NSlider
-        onSliderChange={onRateChange}
-        value={storedRate}
-        labelText="Rate"
-        min={0}
-        max={2}
-      />
+        <ScaperControlsSection>
+          <div>[TRANSPORT]</div>
+          <button onClick={() => playerNode.start()}>start</button>
+          <button onClick={() => playerNode.stop()}>stop</button>
+        </ScaperControlsSection>
 
-      <NSlider
-        onSliderChange={onAmpChange}
-        value={storedAmp}
-        labelText="Level"
-        min={0}
-        max={1}
-        logScale
-      />
+        <ScaperControlsSection>
+          <div>[LOOPER CONTROLS]</div>
+          <NSlider
+            onSliderChange={onRateChange}
+            value={storedRate}
+            labelText="Rate"
+            min={0}
+            max={2}
+            totalWidth={containerWidth}
+          />
+          <NSlider
+            onSliderChange={onAmpChange}
+            value={storedAmp}
+            labelText="Level"
+            min={0}
+            max={1}
+            totalWidth={containerWidth}
+            logScale
+          />
+        </ScaperControlsSection>
 
-      <div>[looper controls]</div>
-      <div>[effects]</div>
-      <NSlider
-        onSliderChange={onDelayAmtChange}
-        value={storedDelayAmt}
-        labelText="Delay"
-        min={0}
-        max={1}
-      />
+        <ScaperControlsSection>
+          <div>[EFFECTS]</div>
+          <NSlider
+            onSliderChange={onDelayTimeChange}
+            value={storedDelayTime}
+            labelText="Delay time"
+            min={0}
+            max={2}
+            totalWidth={containerWidth}
+          />
+          <NSlider
+            onSliderChange={onDelayAmtChange}
+            value={storedDelayAmt}
+            labelText="Feedback"
+            min={0}
+            max={1}
+            totalWidth={containerWidth}
+          />
+        </ScaperControlsSection>
+      </div>
     </ScaperContainer>
   );
   // }, [storedRate]);

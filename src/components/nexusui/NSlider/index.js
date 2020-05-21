@@ -1,6 +1,6 @@
-import React from "react";
-import { Slider, Number } from "react-nexusui";
-import styled from "styled-components";
+import React from 'react';
+import { Slider, Number } from 'react-nexusui';
+import styled from 'styled-components';
 const NSliderContainer = styled.div`
   margin: 10px 0;
 `;
@@ -8,6 +8,7 @@ const NSliderContainer = styled.div`
 const Inner = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
 `;
 
 export default function NSlider({
@@ -15,6 +16,7 @@ export default function NSlider({
   onSliderChange,
   value,
   logScale,
+  totalWidth,
   ...props
 }) {
   return (
@@ -22,14 +24,14 @@ export default function NSlider({
       <div>{labelText}</div>
       <Inner>
         <Slider // playback rate
-          size={[180, 14]}
+          size={[totalWidth * 0.8, 14]}
           value={value}
           onChange={onSliderChange}
           {...props}
         />
         <Number
           value={logScale ? Math.pow(value, 2) : value}
-          size={10}
+          size={[totalWidth * 0.15, 22]}
           {...props}
         />
       </Inner>
