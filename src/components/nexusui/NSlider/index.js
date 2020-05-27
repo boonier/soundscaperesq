@@ -1,6 +1,7 @@
 import React from 'react';
 import { Slider, Number } from 'react-nexusui';
 import styled from 'styled-components';
+
 const NSliderContainer = styled.div`
   margin: 10px 0;
 `;
@@ -19,11 +20,13 @@ export default function NSlider({
   totalWidth,
   ...props
 }) {
+  // console.log('rendering NSlider');
+
   return (
     <NSliderContainer>
       <div>{labelText}</div>
       <Inner>
-        <Slider // playback rate
+        <Slider
           size={[totalWidth * 0.8, 14]}
           value={value}
           onChange={onSliderChange}

@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Tone from 'tone';
-import { ScaperContainer, ScaperControlsSection } from './styles';
+import {
+  ScaperContainer,
+  ScaperControlsSection,
+  ScaperControlsTitle,
+} from './styles';
 import NSlider from '../nexusui/NSlider';
+import { Slider, Number, Toggle } from 'react-nexusui';
 import DubDelay from '../tonejs/DubDelay';
 
 export default function Scaper({
@@ -12,60 +17,127 @@ export default function Scaper({
   delayFeedback = 0.5,
   delayTime = 0.25,
   delayMix = 0.5,
+  filterFreq = 1000,
 }) {
   const containerRef = useRef(null);
   const playerNode = useRef(new Tone.Player()).current;
-  const volumeNode = useRef(new Tone.Gain(amp, 'Decibels')).current;
-  // for tape delay effect
+  const volumeNode = useRef(new Tone.Gain()).current;
   const dubDelayNode = useRef(new DubDelay()).current;
-  // console.log(dubDelayNode);
+  const filterNode = useRef(new Tone.Filter({ type: 'highpass' })).current;
+  playerNode.chain(volumeNode, filterNode, dubDelayNode, Tone.Master);
 
-  // const lfoNode = useRef(new Tone.LFO(0.02, 0.096, 0.14)).current;
-  playerNode.chain(dubDelayNode, Tone.Master);
-  // delayNode.toMaster();
+  const [state, setState] = useState({
+    storedRate: rate,
+    storedAmp: amp,
+    storedDelayFeedback: delayFeedback,
+    storedDelayTime: delayTime,
+    storedDelayMix: delayMix,
+    storedFilterFreq: filterFreq,
+    storedFilterRes: 0,
+  });
 
-  const [storedRate, setStoredRate] = useState(rate);
-  const onRateChange = useCallback(e => setStoredRate(e), []);
+  const updateState = (val, control) => {
+    setState(prevState => ({
+      ...prevState,
+      storedAmp: val,
+    }));
+  };
+
+  const onRateChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedRate: e,
+      })),
+    []
+  );
   useEffect(() => {
-    playerNode.playbackRate = storedRate;
-  }, [storedRate]);
+    playerNode.playbackRate = state.storedRate;
+  }, [state.storedRate]);
 
-  const [storedAmp, setStoredAmp] = useState(amp);
-  const onAmpChange = useCallback(e => setStoredAmp(e), []);
+  const onAmpChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedAmp: e,
+      })),
+    []
+  );
   useEffect(() => {
-    volumeNode.gain.rampTo(Math.pow(storedAmp, 2), 0.2);
-  }, [storedAmp]);
+    volumeNode.gain.rampTo(Math.pow(state.storedAmp, 2), 0.2);
+  }, [state.storedAmp]);
+
+  // FILTER
+  const onFilterFreqChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedFilterFreq: e,
+      })),
+    []
+  );
+  useEffect(() => {
+    filterNode.frequency.rampTo(state.storedFilterFreq, 0.2);
+  }, [state.storedFilterFreq]);
+
+  const onFilterResChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedFilterRes: e,
+      })),
+    []
+  );
+  useEffect(() => {
+    filterNode.Q.rampTo(state.storedFilterRes, 0.2);
+  }, [state.storedFilterRes]);
 
   // FEEDBACK
-  const [storedDelayFeedback, setStoredDelayFeedback] = useState(delayFeedback);
-  const onDelayFeedbackChange = useCallback(e => setStoredDelayFeedback(e), []);
+  const onDelayFeedbackChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedDelayFeedback: e,
+      })),
+    []
+  );
   useEffect(() => {
-    dubDelayNode.feedback(storedDelayFeedback);
-  }, [storedDelayFeedback]);
+    dubDelayNode.feedback(state.storedDelayFeedback);
+  }, [state.storedDelayFeedback]);
 
   // DELAY TIME
-  const [storedDelayTime, setStoredDelayTime] = useState(delayTime);
-  const onDelayTimeChange = useCallback(e => setStoredDelayTime(e), []);
+  const onDelayTimeChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedDelayTime: e,
+      })),
+    []
+  );
   useEffect(() => {
-    dubDelayNode.delayTime(storedDelayTime);
-  }, [storedDelayTime]);
+    dubDelayNode.delayTime(state.storedDelayTime);
+  }, [state.storedDelayTime]);
 
   // DELAY TIME
-  const [storedDelayMix, setStoredDelayMix] = useState(delayMix);
-  const onDelayMixChange = useCallback(e => setStoredDelayMix(e), []);
+  const onDelayMixChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedDelayMix: e,
+      })),
+    []
+  );
   useEffect(() => {
-    dubDelayNode.wet.rampTo(storedDelayMix, 0.2);
-  }, [storedDelayMix]);
+    dubDelayNode.wet.rampTo(state.storedDelayMix, 0.2);
+  }, [state.storedDelayMix]);
 
   const [containerWidth, setContainerWidth] = useState(200);
 
   useEffect(() => {
-    // lfoNode.start();
-    // delayNode.delayTime.rampTo(0.1, 1);
-
-    playerNode.load(source, player =>
-      console.log(player.buffer.length, player.buffer.length / 200)
-    );
+    // playerNode.load(source, player =>
+    //   console.log(player.buffer.length, player.buffer.length / 200)
+    // );
+    playerNode.buffer = source;
     playerNode.loop = loop;
     playerNode.playbackRate = rate;
 
@@ -73,6 +145,7 @@ export default function Scaper({
       playerNode.disconnect();
       volumeNode.disconnect();
       dubDelayNode.disconnect();
+      filterNode.disconnect();
     };
   }, []);
 
@@ -83,28 +156,32 @@ export default function Scaper({
   return (
     <ScaperContainer>
       <div ref={containerRef}>
-        <div>[FILE VIEW]</div>
+        <ScaperControlsSection>
+          <ScaperControlsTitle>FILE VIEW</ScaperControlsTitle>
+        </ScaperControlsSection>
 
         <ScaperControlsSection>
-          <div>[TRANSPORT]</div>
+          <ScaperControlsTitle>TRANSPORT</ScaperControlsTitle>
           <button onClick={() => playerNode.start()}>start</button>
           <button onClick={() => playerNode.stop()}>stop</button>
         </ScaperControlsSection>
 
         <ScaperControlsSection>
-          <div>[LOOPER CONTROLS]</div>
+          <ScaperControlsTitle>LOOPER CONTROLS</ScaperControlsTitle>
           <NSlider
+            // onSliderChange={onControlChange}
             onSliderChange={onRateChange}
-            value={storedRate}
+            value={state.storedRate}
             labelText="Rate"
             min={0}
             max={2}
             totalWidth={containerWidth}
           />
           <NSlider
+            // onSliderChange={val => onControlChange(val)}
             onSliderChange={onAmpChange}
-            value={storedAmp}
-            labelText="Level"
+            value={state.storedAmp}
+            labelText="Amplitude"
             min={0}
             max={1}
             totalWidth={containerWidth}
@@ -113,10 +190,33 @@ export default function Scaper({
         </ScaperControlsSection>
 
         <ScaperControlsSection>
-          <div>[EFFECTS]</div>
+          <ScaperControlsTitle>FILTER</ScaperControlsTitle>
+          <Toggle size={[20, 22]} />
+          <NSlider
+            onSliderChange={onFilterFreqChange}
+            value={state.storedFilterFreq}
+            labelText="Filter freq"
+            min={20}
+            max={20000}
+            totalWidth={containerWidth}
+            // logScale
+          />
+          <NSlider
+            onSliderChange={onFilterResChange}
+            value={state.storedFilterRes}
+            labelText="Filter res"
+            min={0}
+            max={100}
+            totalWidth={containerWidth}
+            // logScale
+          />
+        </ScaperControlsSection>
+
+        <ScaperControlsSection>
+          <ScaperControlsTitle>EFFECTS</ScaperControlsTitle>
           <NSlider
             onSliderChange={onDelayTimeChange}
-            value={storedDelayTime}
+            value={state.storedDelayTime}
             labelText="Delay time"
             min={0}
             max={2}
@@ -124,7 +224,7 @@ export default function Scaper({
           />
           <NSlider
             onSliderChange={onDelayFeedbackChange}
-            value={storedDelayFeedback}
+            value={state.storedDelayFeedback}
             labelText="Feedback"
             min={0}
             max={1}
@@ -132,7 +232,7 @@ export default function Scaper({
           />
           <NSlider
             onSliderChange={onDelayMixChange}
-            value={storedDelayMix}
+            value={state.storedDelayMix}
             labelText="Mix"
             min={0}
             max={1}

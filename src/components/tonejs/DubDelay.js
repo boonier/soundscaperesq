@@ -17,7 +17,7 @@ export default class DubDelay extends Tone.Effect {
   }
 
   delayTime(val) {
-    this.delayNode.delayTime.rampTo(val, 1);
+    this.delayNode.delayTime.rampTo(val, 0.2);
   }
 
   feedback(val) {

@@ -16,3 +16,7 @@ export const ScaperControlsSection = styled.section`
     margin-bottom: 0px;
   }
 `;
+
+export const ScaperControlsTitle = styled.h2`
+  font-weight: bold;
+`;
