@@ -8,6 +8,8 @@ import {
 import NSlider from '../nexusui/NSlider';
 import { Slider, Number, Toggle } from 'react-nexusui';
 import DubDelay from '../tonejs/DubDelay';
+import RingMod from '../tonejs/RingMod';
+import ToggleButton from './ToggleButton';
 
 export default function Scaper({
   source,
@@ -18,13 +20,24 @@ export default function Scaper({
   delayTime = 0.25,
   delayMix = 0.5,
   filterFreq = 1000,
+  ringModFreq = 200,
 }) {
   const containerRef = useRef(null);
   const playerNode = useRef(new Tone.Player()).current;
   const volumeNode = useRef(new Tone.Gain()).current;
   const dubDelayNode = useRef(new DubDelay()).current;
+  const ringModNode = useRef(new RingMod()).current;
   const filterNode = useRef(new Tone.Filter({ type: 'highpass' })).current;
-  playerNode.chain(volumeNode, filterNode, dubDelayNode, Tone.Master);
+
+  // console.log(ringModNode);
+
+  playerNode.chain(
+    volumeNode,
+    ringModNode,
+    dubDelayNode,
+    filterNode,
+    Tone.Master
+  );
 
   const [state, setState] = useState({
     storedRate: rate,
@@ -34,6 +47,8 @@ export default function Scaper({
     storedDelayMix: delayMix,
     storedFilterFreq: filterFreq,
     storedFilterRes: 0,
+    storedRingModFreq: ringModFreq,
+    isPlaying: false,
   });
 
   const updateState = (val, control) => {
@@ -66,6 +81,18 @@ export default function Scaper({
   useEffect(() => {
     volumeNode.gain.rampTo(Math.pow(state.storedAmp, 2), 0.2);
   }, [state.storedAmp]);
+
+  const onRingModFreqChange = useCallback(
+    e =>
+      setState(state => ({
+        ...state,
+        storedRingModFreq: e,
+      })),
+    []
+  );
+  useEffect(() => {
+    ringModNode.carrFreq(state.storedRingModFreq);
+  }, [state.storedRingModFreq]);
 
   // FILTER
   const onFilterFreqChange = useCallback(
@@ -146,12 +173,23 @@ export default function Scaper({
       volumeNode.disconnect();
       dubDelayNode.disconnect();
       filterNode.disconnect();
+      ringModNode.disconnect();
     };
   }, []);
 
   useEffect(() => setContainerWidth(containerRef.current.clientWidth), [
     containerWidth,
   ]);
+
+  const onPlayChange = () => {
+    setState(state => ({
+      ...state,
+      isPlaying: !state.isPlaying,
+    }));
+  };
+  useEffect(() => {
+    state.isPlaying ? playerNode.start() : playerNode.stop();
+  }, [state.isPlaying]);
 
   return (
     <ScaperContainer>
@@ -162,8 +200,13 @@ export default function Scaper({
 
         <ScaperControlsSection>
           <ScaperControlsTitle>TRANSPORT</ScaperControlsTitle>
-          <button onClick={() => playerNode.start()}>start</button>
-          <button onClick={() => playerNode.stop()}>stop</button>
+          {/* <button onClick={() => playerNode.start()}>start</button> */}
+          {/* <button onClick={() => playerNode.stop()}>stop</button> */}
+          <ToggleButton
+            states={['Start', 'Stop']}
+            isToggled={state.isPlaying}
+            onClick={onPlayChange}
+          />
         </ScaperControlsSection>
 
         <ScaperControlsSection>
@@ -187,15 +230,37 @@ export default function Scaper({
             totalWidth={containerWidth}
             logScale
           />
+
+          <ScaperControlsTitle>RING MODULATOR</ScaperControlsTitle>
+          <NSlider
+            // onSliderChange={onControlChange}
+            onSliderChange={onRingModFreqChange}
+            value={state.storedRingModFreq}
+            labelText="Frequency"
+            min={50}
+            max={2000}
+            totalWidth={containerWidth}
+          />
+          {/* <NSlider
+            // onSliderChange={val => onControlChange(val)}
+            onSliderChange={onAmpChange}
+            value={state.storedAmp}
+            labelText="Mix"
+            min={0}
+            max={1}
+            totalWidth={containerWidth}
+            logScale
+          /> */}
         </ScaperControlsSection>
 
         <ScaperControlsSection>
           <ScaperControlsTitle>FILTER</ScaperControlsTitle>
           <Toggle size={[20, 22]} />
+          [FILTER TYPE]
           <NSlider
             onSliderChange={onFilterFreqChange}
             value={state.storedFilterFreq}
-            labelText="Filter freq"
+            labelText="Frequency"
             min={20}
             max={20000}
             totalWidth={containerWidth}
@@ -204,7 +269,7 @@ export default function Scaper({
           <NSlider
             onSliderChange={onFilterResChange}
             value={state.storedFilterRes}
-            labelText="Filter res"
+            labelText="Resonance"
             min={0}
             max={100}
             totalWidth={containerWidth}
