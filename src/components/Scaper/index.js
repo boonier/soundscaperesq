@@ -10,6 +10,7 @@ import { Slider, Number, Toggle } from 'react-nexusui';
 import DubDelay from '../tonejs/DubDelay';
 import RingMod from '../tonejs/RingMod';
 import ToggleButton from './ToggleButton';
+import memoize from 'fast-memoize';
 
 export default function Scaper({
   source,
@@ -51,109 +52,50 @@ export default function Scaper({
     isPlaying: false,
   });
 
-  const updateState = (val, control) => {
+  const onControlChange = useCallback(
+    memoize(control => val => updateState(control, val)),
+    []
+  );
+
+  const updateState = (control, val) => {
     setState(prevState => ({
       ...prevState,
-      storedAmp: val,
+      [control]: val,
     }));
   };
 
-  const onRateChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedRate: e,
-      })),
-    []
-  );
   useEffect(() => {
     playerNode.playbackRate = state.storedRate;
   }, [state.storedRate]);
 
-  const onAmpChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedAmp: e,
-      })),
-    []
-  );
   useEffect(() => {
     volumeNode.gain.rampTo(Math.pow(state.storedAmp, 2), 0.2);
   }, [state.storedAmp]);
 
-  const onRingModFreqChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedRingModFreq: e,
-      })),
-    []
-  );
   useEffect(() => {
     ringModNode.carrFreq(state.storedRingModFreq);
   }, [state.storedRingModFreq]);
 
   // FILTER
-  const onFilterFreqChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedFilterFreq: e,
-      })),
-    []
-  );
   useEffect(() => {
     filterNode.frequency.rampTo(state.storedFilterFreq, 0.2);
   }, [state.storedFilterFreq]);
 
-  const onFilterResChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedFilterRes: e,
-      })),
-    []
-  );
   useEffect(() => {
     filterNode.Q.rampTo(state.storedFilterRes, 0.2);
   }, [state.storedFilterRes]);
 
   // FEEDBACK
-  const onDelayFeedbackChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedDelayFeedback: e,
-      })),
-    []
-  );
   useEffect(() => {
     dubDelayNode.feedback(state.storedDelayFeedback);
   }, [state.storedDelayFeedback]);
 
   // DELAY TIME
-  const onDelayTimeChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedDelayTime: e,
-      })),
-    []
-  );
   useEffect(() => {
     dubDelayNode.delayTime(state.storedDelayTime);
   }, [state.storedDelayTime]);
 
   // DELAY TIME
-  const onDelayMixChange = useCallback(
-    e =>
-      setState(state => ({
-        ...state,
-        storedDelayMix: e,
-      })),
-    []
-  );
   useEffect(() => {
     dubDelayNode.wet.rampTo(state.storedDelayMix, 0.2);
   }, [state.storedDelayMix]);
@@ -213,7 +155,7 @@ export default function Scaper({
           <ScaperControlsTitle>LOOPER CONTROLS</ScaperControlsTitle>
           <NSlider
             // onSliderChange={onControlChange}
-            onSliderChange={onRateChange}
+            onSliderChange={onControlChange('storedRate')}
             value={state.storedRate}
             labelText="Rate"
             min={0}
@@ -222,7 +164,7 @@ export default function Scaper({
           />
           <NSlider
             // onSliderChange={val => onControlChange(val)}
-            onSliderChange={onAmpChange}
+            onSliderChange={onControlChange('storedAmp')}
             value={state.storedAmp}
             labelText="Amplitude"
             min={0}
@@ -233,8 +175,8 @@ export default function Scaper({
 
           <ScaperControlsTitle>RING MODULATOR</ScaperControlsTitle>
           <NSlider
-            // onSliderChange={onControlChange}
-            onSliderChange={onRingModFreqChange}
+            onSliderChange={onControlChange('storedRingModFreq')}
+            // onSliderChange={onRingModFreqChange}
             value={state.storedRingModFreq}
             labelText="Frequency"
             min={50}
@@ -258,7 +200,7 @@ export default function Scaper({
           <Toggle size={[20, 22]} />
           [FILTER TYPE]
           <NSlider
-            onSliderChange={onFilterFreqChange}
+            onSliderChange={onControlChange('storedFilterFreq')}
             value={state.storedFilterFreq}
             labelText="Frequency"
             min={20}
@@ -267,7 +209,7 @@ export default function Scaper({
             // logScale
           />
           <NSlider
-            onSliderChange={onFilterResChange}
+            onSliderChange={onControlChange('storedFilterRes')}
             value={state.storedFilterRes}
             labelText="Resonance"
             min={0}
@@ -280,7 +222,7 @@ export default function Scaper({
         <ScaperControlsSection>
           <ScaperControlsTitle>EFFECTS</ScaperControlsTitle>
           <NSlider
-            onSliderChange={onDelayTimeChange}
+            onSliderChange={onControlChange('storedDelayTime')}
             value={state.storedDelayTime}
             labelText="Delay time"
             min={0}
@@ -288,7 +230,7 @@ export default function Scaper({
             totalWidth={containerWidth}
           />
           <NSlider
-            onSliderChange={onDelayFeedbackChange}
+            onSliderChange={onControlChange('storedDelayFeedback')}
             value={state.storedDelayFeedback}
             labelText="Feedback"
             min={0}
@@ -296,7 +238,7 @@ export default function Scaper({
             totalWidth={containerWidth}
           />
           <NSlider
-            onSliderChange={onDelayMixChange}
+            onSliderChange={onControlChange('storedDelayMix')}
             value={state.storedDelayMix}
             labelText="Mix"
             min={0}
