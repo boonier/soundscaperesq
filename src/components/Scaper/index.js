@@ -4,9 +4,10 @@ import {
   ScaperContainer,
   ScaperControlsSection,
   ScaperControlsTitle,
+  ScaperControlsSubTitle,
 } from './styles';
 import NSlider from '../nexusui/NSlider';
-import { Slider, Number, Toggle } from 'react-nexusui';
+import { Toggle, RadioButton } from 'react-nexusui';
 import DubDelay from '../tonejs/DubDelay';
 import RingMod from '../tonejs/RingMod';
 import ToggleButton from './ToggleButton';
@@ -110,7 +111,7 @@ export default function Scaper({
     playerNode.loop = loop;
     playerNode.playbackRate = rate;
 
-    return function cleanUp() {
+    return function () {
       playerNode.disconnect();
       volumeNode.disconnect();
       dubDelayNode.disconnect();
@@ -141,18 +142,12 @@ export default function Scaper({
         </ScaperControlsSection>
 
         <ScaperControlsSection>
-          <ScaperControlsTitle>TRANSPORT</ScaperControlsTitle>
-          {/* <button onClick={() => playerNode.start()}>start</button> */}
-          {/* <button onClick={() => playerNode.stop()}>stop</button> */}
+          {/* <ScaperControlsTitle>MAIN CONTROLS</ScaperControlsTitle> */}
           <ToggleButton
             states={['Start', 'Stop']}
             isToggled={state.isPlaying}
             onClick={onPlayChange}
           />
-        </ScaperControlsSection>
-
-        <ScaperControlsSection>
-          <ScaperControlsTitle>LOOPER CONTROLS</ScaperControlsTitle>
           <NSlider
             // onSliderChange={onControlChange}
             onSliderChange={onControlChange('storedRate')}
@@ -172,17 +167,32 @@ export default function Scaper({
             totalWidth={containerWidth}
             logScale
           />
+        </ScaperControlsSection>
 
-          <ScaperControlsTitle>RING MODULATOR</ScaperControlsTitle>
+        <ScaperControlsSection>
+          <ScaperControlsTitle>OSCILLATOR</ScaperControlsTitle>
+          <ScaperControlsSubTitle>RING MODULATOR</ScaperControlsSubTitle>
           <NSlider
             onSliderChange={onControlChange('storedRingModFreq')}
-            // onSliderChange={onRingModFreqChange}
             value={state.storedRingModFreq}
             labelText="Frequency"
             min={50}
             max={2000}
             totalWidth={containerWidth}
           />
+          <RadioButton size={[160, 13]} numberOfButtons={4} active={-1} />
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              width: '160px',
+            }}
+          >
+            <span>Sin</span>
+            <span>Tri</span>
+            <span>Sqr</span>
+            <span>Saw</span>
+          </div>
           {/* <NSlider
             // onSliderChange={val => onControlChange(val)}
             onSliderChange={onAmpChange}

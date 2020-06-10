@@ -12,6 +12,10 @@ const Inner = styled.div`
   align-items: center;
 `;
 
+const Label = styled.div`
+  font-size: 11px;
+`;
+
 export default function NSlider({
   labelText,
   onSliderChange,
@@ -24,7 +28,7 @@ export default function NSlider({
 
   return (
     <NSliderContainer>
-      <div>{labelText}</div>
+      <Label>{labelText}</Label>
       <Inner>
         <Slider
           size={[totalWidth * 0.8, 14]}

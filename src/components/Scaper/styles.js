@@ -19,4 +19,11 @@ export const ScaperControlsSection = styled.section`
 
 export const ScaperControlsTitle = styled.h2`
   font-weight: bold;
+  font-size: 13px;
+`;
+
+export const ScaperControlsSubTitle = styled.h3`
+  font-weight: bold;
+  font-size: 11px;
+  color: #848484;
 `;
