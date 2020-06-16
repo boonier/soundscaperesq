@@ -7,10 +7,13 @@ import {
   ScaperControlsSubTitle,
 } from './styles';
 import NSlider from '../nexusui/NSlider';
+import NRadioButtons from '../nexusui/NRadioButtons';
+
 import { Toggle, RadioButton } from 'react-nexusui';
+import ToggleButton from './ToggleButton';
+
 import DubDelay from '../tonejs/DubDelay';
 import RingMod from '../tonejs/RingMod';
-import ToggleButton from './ToggleButton';
 import memoize from 'fast-memoize';
 
 export default function Scaper({
@@ -50,6 +53,7 @@ export default function Scaper({
     storedFilterFreq: filterFreq,
     storedFilterRes: 0,
     storedRingModFreq: ringModFreq,
+    storedRingModWave: 0,
     isPlaying: false,
   });
 
@@ -76,6 +80,10 @@ export default function Scaper({
   useEffect(() => {
     ringModNode.carrFreq(state.storedRingModFreq);
   }, [state.storedRingModFreq]);
+
+  useEffect(() => {
+    ringModNode.modWave(state.storedRingModWave);
+  }, [state.storedRingModWave]);
 
   // FILTER
   useEffect(() => {
@@ -180,19 +188,25 @@ export default function Scaper({
             max={2000}
             totalWidth={containerWidth}
           />
-          <RadioButton size={[160, 13]} numberOfButtons={4} active={-1} />
-          <div
+          <NRadioButtons
+            onRadioChange={onControlChange('storedRingModWave')}
+            active={state.storedRingModWave}
+            totalWidth={containerWidth}
+          />
+          {/* <RadioButton size={[160, 13]} numberOfButtons={4} active={-1} /> */}
+          {/* <div
             style={{
               display: 'flex',
               justifyContent: 'space-around',
               width: '160px',
+              fontSize: '11px',
             }}
           >
             <span>Sin</span>
             <span>Tri</span>
             <span>Sqr</span>
             <span>Saw</span>
-          </div>
+          </div> */}
           {/* <NSlider
             // onSliderChange={val => onControlChange(val)}
             onSliderChange={onAmpChange}

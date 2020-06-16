@@ -16,4 +16,25 @@ export default class RingMod extends Tone.Effect {
   carrFreq(val) {
     this.ringOsc.frequency.rampTo(val, 0.2);
   }
+
+  modWave(val) {
+    let type = 'sine';
+    switch (val) {
+      case 1:
+        type = 'square';
+        break;
+      case 2:
+        type = 'triangle';
+        break;
+      case 3:
+        type = 'sawtooth';
+        break;
+      default:
+        type = 'sine';
+    }
+
+    console.log('type', type);
+
+    this.ringOsc.type = type;
+  }
 }
