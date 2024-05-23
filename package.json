@@ -5,6 +5,7 @@
   "license": "meh",
   "keywords": [],
   "main": "src/index.js",
+  "homepage": "http://boonier.github.io/soundscaperesq",
   "dependencies": {
     "babel-plugin-styled-components": "1.10.6",
     "fast-memoize": "^2.5.2",

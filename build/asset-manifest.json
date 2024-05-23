@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/soundscaperesq/static/css/main.7d3ec644.chunk.css",
+    "main.js": "/soundscaperesq/static/js/main.8905ee6a.chunk.js",
+    "main.js.map": "/soundscaperesq/static/js/main.8905ee6a.chunk.js.map",
+    "runtime~main.js": "/soundscaperesq/static/js/runtime~main.428c4949.js",
+    "runtime~main.js.map": "/soundscaperesq/static/js/runtime~main.428c4949.js.map",
+    "static/js/2.527d72ed.chunk.js": "/soundscaperesq/static/js/2.527d72ed.chunk.js",
+    "static/js/2.527d72ed.chunk.js.map": "/soundscaperesq/static/js/2.527d72ed.chunk.js.map",
+    "index.html": "/soundscaperesq/index.html",
+    "precache-manifest.deef9b4d3f121e5535b5434659000f92.js": "/soundscaperesq/precache-manifest.deef9b4d3f121e5535b5434659000f92.js",
+    "service-worker.js": "/soundscaperesq/service-worker.js",
+    "static/css/main.7d3ec644.chunk.css.map": "/soundscaperesq/static/css/main.7d3ec644.chunk.css.map"
+  }
+}
